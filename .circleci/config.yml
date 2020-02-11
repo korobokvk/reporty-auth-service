@@ -39,11 +39,7 @@ workflows:
   version: 2
   build-master:
     jobs:
-      - build:
-          filters:
-            branches:
+      - build
       - publish-latest:
           requires:
             - build
-          filters:
-            branches:
