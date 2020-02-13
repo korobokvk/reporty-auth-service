@@ -8,6 +8,9 @@ service AuthService {
   rpc IsAuthUser (JWT) returns (SuccessMessage);
 };
 
+service DataBaseProvider {
+  rpc CreateUser (stream Credentials) returns (SuccessMessage);
+}
 message JWT {
   string JWT = 1;
 }
