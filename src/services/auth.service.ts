@@ -7,13 +7,14 @@ export const userAuth = (call): void => {
       throw err
     }
 
-    const sendDataToClient = (data) => {
-      call.write(data)
-      call.end()
-    }
-
-    createUser(client, data, sendDataToClient)
+    createUser(client, data)
+      .then((response) => {
+        call.write(response)
+        call.end()
+      })
+      .catch((err) => call.write(err))
   })
+
   call.on('end', (data, err) => {
     if (err) {
       throw err
