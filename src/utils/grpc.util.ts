@@ -2,6 +2,7 @@ import grpc, { GrpcObject } from 'grpc'
 import { loadSync, PackageDefinition, Options } from '@grpc/proto-loader'
 
 const PROTO_PATH = __dirname + '/../../app.proto'
+
 const options: Options = {
   keepCase: true,
   longs: String,
