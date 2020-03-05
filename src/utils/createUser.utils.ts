@@ -1,10 +1,10 @@
-export const createUser = (client, data, callback) => {
-  const call = client.createUser((err, data) => {
-    if (err) {
-      throw err
-    }
-
-    callback(data)
+export const createUser = (client, data) => {
+  return new Promise((resolve, reject) => {
+    client.createUser(data, (err, response) => {
+      if (err) {
+        reject(err)
+      }
+      resolve(response)
+    })
   })
-  call.write(data)
 }
