@@ -1,11 +1,12 @@
 import grpc from 'grpc'
 import { app } from './utils/grpc.util'
-import { userAuth, isAuthUser } from './services/auth.service'
+import { userAuth, isAuthUser, createUser } from './rpc/auth.service'
 
 const getServer = () => {
   const server = new grpc.Server()
   server.addService(app['AuthService'].service, {
     userAuth,
+    createUser,
     isAuthUser,
   })
   return server

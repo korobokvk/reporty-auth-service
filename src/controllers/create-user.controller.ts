@@ -1,17 +1,14 @@
-import { createUser } from '../utils/createUser.utils'
+import { createUser } from '../utils/user.utils'
+import { User } from '../interfaces/User'
 
-export class CreateUserController {
+export class CreateUserController implements User {
   private client: any
-  private data: {
-    email: string
-    password: string
-  }
-  constructor(client, data) {
+
+  constructor(client) {
     this.client = client
-    this.data = data
   }
 
-  createUser() {
-    return createUser(this.client, this.data)
+  authUser(email: string, password: string): Promise<boolean> {
+    return createUser(this.client, email, password)
   }
 }

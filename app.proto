@@ -5,11 +5,13 @@ package app;
 
 service AuthService {
   rpc UserAuth (stream Credentials) returns (stream SuccessMessage);
+  rpc CreateUser (stream Credentials) returns (stream SuccessMessage);
   rpc IsAuthUser (JWT) returns (SuccessMessage);
 };
 
 service DataBaseProvider {
   rpc CreateUser (Credentials) returns (SuccessMessage);
+  rpc UserAuth (Credentials) returns (SuccessMessage);
 }
 message JWT {
   string JWT = 1;
