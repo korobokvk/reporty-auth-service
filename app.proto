@@ -1,0 +1,25 @@
+
+syntax = "proto3";
+
+package app;
+
+service AuthService {
+  rpc UserAuth (stream Credentials) returns (stream SuccessMessage);
+  rpc IsAuthUser (JWT) returns (SuccessMessage);
+};
+
+service DataBaseProvider {
+  rpc CreateUser (Credentials) returns (SuccessMessage);
+}
+message JWT {
+  string JWT = 1;
+}
+message Credentials {
+  string email = 1;
+  string password = 2;
+};
+message SuccessMessage {
+  string email = 1;
+  string password = 2;
+  int32 id = 3;
+};

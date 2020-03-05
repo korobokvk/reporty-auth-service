@@ -1,13 +1,16 @@
-import http, { IncomingMessage, ServerResponse } from 'http'
-import url from 'url'
+import grpc from 'grpc'
+import { app } from './utils/grpc.util'
+import { userAuth, isAuthUser } from './services/auth.service'
 
-const PORT = 3000
-
-const requestListener = (req: IncomingMessage, res: ServerResponse) => {
-  let reqUrl = `http://${req.headers.host}${req.url}`
-  let parseUrl = url.parse(reqUrl, true)
-  console.log(parseUrl)
-  res.end(reqUrl)
+const getServer = () => {
+  const server = new grpc.Server()
+  server.addService(app['AuthService'].service, {
+    userAuth,
+    isAuthUser,
+  })
+  return server
 }
-let server = http.createServer(requestListener)
-server.listen(PORT)
+
+const routeServer = getServer()
+routeServer.bind('0.0.0.0:3000', grpc.ServerCredentials.createInsecure())
+routeServer.start()
