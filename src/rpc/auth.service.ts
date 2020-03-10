@@ -1,17 +1,30 @@
 import { client } from './client.service'
-import { AuthUserController } from '../controllers/auth-user.controller'
-import { CreateUserController } from '../controllers/create-user.controller'
-import { userStreamCallback } from '../utils/user.utils'
+import { IUser, ICredentials, ICallback } from '../interfaces/User'
+import CallbacksController from '../controllers/callbacks.controllers'
+import JwtService from '../services/jwt.service'
+import CryptoService from '../services/crypto.service'
 
-const authUserController = new AuthUserController(client)
-const createUserController = new CreateUserController(client)
+const crypto = new CryptoService()
+export default class AuthService implements IUser {
+  public createUser = async (call: ICredentials, callback: ICallback) => {
+    const { request: credentials } = call
+    const { password, email } = credentials
+    const saltPassword = await crypto.saltData(password)
+    const { sendWithJwt } = new CallbacksController(callback)
+    client.createUser({ email, password: saltPassword }, sendWithJwt)
+  }
 
-export const userAuth = (call): void => userStreamCallback(call, authUserController)
+  public userAuth = (call: ICredentials, callback) => {
+    const { request: credentials } = call
+    const { compareAndSendWithJwt } = new CallbacksController(callback, credentials)
+    client.findByEmail(credentials, compareAndSendWithJwt)
+  }
 
-export const createUser = (call): void => userStreamCallback(call, createUserController)
-
-export const isAuthUser = (JWT) => {
-  // TODO: need to finish is auth method
-  console.log('Check user')
-  return true
+  public isAuthUser = (call: ICredentials, callback: ICallback) => {
+    const { request: jwt } = call
+    const { checkTokenIsValid } = new CallbacksController(callback)
+    const error = new Error(JSON.stringify({ code: 401, message: 'Unauthorized' }))
+    const isUserValid = jwt ? new JwtService().decodeAuthToken(jwt) : checkTokenIsValid(error, null)
+    client.findById(isUserValid, checkTokenIsValid)
+  }
 }
