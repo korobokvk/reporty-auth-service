@@ -1,4 +1,6 @@
 {
   "privateKey": "reporty-auth-private-key",
-  "hashRounds": 10
+  "keyForHash": "hhdnn#@!erjuJJJKKSMD#2887SDLSMD@",
+  "hashRounds": 1000,
+  "keyLength": 64
 }

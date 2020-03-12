@@ -6,26 +6,46 @@ package app;
 service AuthService {
   rpc UserAuth (Credentials) returns (JWT) {};
   rpc CreateUser (Credentials) returns (JWT) {};
-  rpc IsAuthUser (JWT) returns (Success) {};
+  rpc IsAuthUser (JWT) returns (JWT) {};
 };
 
 service DataBaseProvider {
-  rpc CreateUser (Credentials) returns (SuccessMessage);
-  rpc FindById (Credentials) returns (SuccessMessage) {};
-  rpc FindByEmail (Credentials) returns (SuccessMessage) {};
+  rpc CreateUser (CredentialsToDB) returns (UserWithoutPassword);
+  rpc FindById (Id) returns (UserData) {};
+  rpc FindByEmail (Email) returns (UserData) {};
 };
 message JWT {
   string JWT = 1;
 };
+
 message Credentials {
   string email = 1;
   string password = 2;
 };
+message Id {
+  string id = 1;
+};
+message Email {
+  string email = 1;
+};
+
+message CredentialsToDB {
+  string email = 1;
+  string password = 2;
+  string salt = 3;
+};
+
 message Success {
   bool success = 1;
 };
-message SuccessMessage {
+
+message UserData {
   string email = 1;
   string password = 2;
   int32 id = 3;
+  string salt = 4;
 };
+
+message UserWithoutPassword {
+  int32 id = 3;
+}

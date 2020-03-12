@@ -1,51 +1,87 @@
 import JwtService from '../services/jwt.service'
 import CryptoService from '../services/crypto.service'
+import ErrorModel from '../models/error/Error.model'
+import ErrorController from './errors.controller'
+import { ERROR_NAMES } from '../constants/errorNames'
 import _ from 'lodash'
-import { compare } from 'bcrypt'
 
 const crypto = new CryptoService()
 
 export default class CallbacksController extends JwtService {
-  constructor(private callback, private userData?) {
+  private errorHandler: ErrorModel
+  constructor(private callback, private userData, private client) {
     super()
+
+    this.errorHandler = new ErrorModel(new ErrorController())
   }
 
-  public sendWithJwt = (err, data) => {
+  private sendWithJwt = (err, data) => {
     if (err) {
-      // TODO: implement errors controller here instead of clb
-      this.callback(err, null)
+      const duplicateError = this.errorHandler.Conflict(ERROR_NAMES.Conflict, err.details)
+      this.callback(duplicateError, null)
+      return
     }
-    const { password, ...rest } = data
-    const jwt = this.generateAuthToken(rest)
+    const jwt = this.generateAuthToken(data)
     this.callback(null, { JWT: jwt })
   }
 
-  public checkTokenIsValid = (err, data) => {
-    if (err) {
-      // TODO: implement errors controller here instead of clb
-      this.callback(err, null)
-    }
-
-    this.callback(null, true)
+  public userCreateCallback = () => {
+    const { password, email } = this.userData
+    const salt = crypto.createSalt()
+    const hashedPassword = crypto.saltData(password, salt)
+    this.client.createUser({ email: email, password: hashedPassword, salt: salt }, this.sendWithJwt)
   }
 
-  public compareAndSendWithJwt = async (err, data) => {
-    if (err || _.isEmpty(this.userData)) {
-      // TODO: implement errors controller here instead of clb
-      this.callback(err, null)
-    }
+  public userAuthCallback = () => {
+    const { email } = this.userData
+    this.client.findByEmail({ email: email }, this.compareCredentials)
+  }
 
-    const { password, ...rest } = data
-    const { password: receivedData } = this.userData
-    try {
-      const compared = await crypto.compareWithHash(receivedData, password)
-      const jwt = this.generateAuthToken(rest)
-      if (compared) {
-        this.callback(null, { JWT: jwt })
-      }
-      //this.callback('Unauthorized', null)
-    } catch (err) {
-      this.callback(err, null)
+  public compareCredentials = (err, data) => {
+    if (err) {
+      const error = this.errorHandler.PasswordIsIncorrect(
+        ERROR_NAMES.BadRequest,
+        'Email address or password is incorrect',
+      )
+      this.callback(error, null)
+      return
     }
+    const { password } = this.userData
+    const { password: receivedPassword, salt, id } = data
+    const compare = crypto.compareWithHash(receivedPassword, password, salt)
+    if (compare) {
+      this.sendWithJwt(null, id)
+    } else {
+      const error = this.errorHandler.PasswordIsIncorrect(
+        ERROR_NAMES.BadRequest,
+        'Email address or password is incorrect',
+      )
+      this.callback(error, null)
+    }
+  }
+
+  public tokenValidation = () => {
+    const { JWT } = this.userData
+    try {
+      const userId = this.verifyAuthToken(JWT)
+      this.client.findById({ id: userId }, (err, data) => {
+        if (err) {
+          this.callback(err, null)
+        }
+        this.callback(null, { JWT: this.getTokenFromBearer(JWT) })
+      })
+    } catch (err) {
+      if (err.name === ERROR_NAMES.TokenExpiredError) {
+        this.updateToken(JWT)
+      } else {
+        const errorMessage = this.errorHandler.JsonWebTokenError(ERROR_NAMES.Unauthorized, 'Unauthorized')
+        this.callback(errorMessage, null)
+      }
+    }
+  }
+
+  public updateToken(oldToken) {
+    const decoded = this.decodeAuthToken(oldToken)
+    this.sendWithJwt(null, decoded['data'])
   }
 }
