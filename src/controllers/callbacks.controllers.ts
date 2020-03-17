@@ -62,8 +62,9 @@ export default class CallbacksController extends JwtService {
   public tokenValidation = () => {
     const { JWT } = this.userData
     try {
-      const userId = this.verifyAuthToken(JWT)
-      this.client.findById({ id: userId }, (err, data) => {
+      const tokenData = this.verifyAuthToken(JWT)
+      const id = _.get(tokenData, 'data')
+      this.client.findById({ id }, (err, data) => {
         if (err) {
           this.callback(err, null)
         }

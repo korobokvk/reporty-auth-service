@@ -10,7 +10,7 @@ export default class JwtService {
     return token
   }
 
-  public verifyAuthToken = (data) => {
+  public verifyAuthToken = (data): object | string => {
     const token = this.getTokenFromBearer(data)
     try {
       return jwt.verify(token, config.get('privateKey'))
