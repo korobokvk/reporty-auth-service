@@ -6,7 +6,7 @@ import { ERROR_NAMES } from '../constants/errorNames'
 import _ from 'lodash'
 
 const crypto = new CryptoService()
-
+const CRASHED_CREDENTIALS_MESSAGE = 'Email address or password is incorrect'
 export default class CallbacksController extends JwtService {
   private errorHandler: ErrorModel
   constructor(private callback, private userData, private client) {
@@ -25,11 +25,15 @@ export default class CallbacksController extends JwtService {
     this.callback(null, { JWT: jwt })
   }
 
-  public userCreateCallback = () => {
+  private getDataWithHashedPassword = () => {
     const { password, email } = this.userData
     const salt = crypto.createSalt()
     const hashedPassword = crypto.saltData(password, salt)
-    this.client.createUser({ email: email, password: hashedPassword, salt: salt }, this.sendWithJwt)
+    return { email: email, password: hashedPassword, salt: salt }
+  }
+
+  public userCreateCallback = () => {
+    this.client.createUser(this.getDataWithHashedPassword(), this.sendWithJwt)
   }
 
   public userAuthCallback = () => {
@@ -39,25 +43,20 @@ export default class CallbacksController extends JwtService {
 
   public compareCredentials = (err, data) => {
     if (err) {
-      const error = this.errorHandler.PasswordIsIncorrect(
-        ERROR_NAMES.BadRequest,
-        'Email address or password is incorrect',
-      )
+      const error = this.errorHandler.PasswordIsIncorrect(ERROR_NAMES.BadRequest, CRASHED_CREDENTIALS_MESSAGE)
       this.callback(error, null)
       return
     }
     const { password } = this.userData
     const { password: receivedPassword, salt, id } = data
-    const compare = crypto.compareWithHash(receivedPassword, password, salt)
+    const compare = crypto.compareWithHash(password, receivedPassword, salt)
     if (compare) {
       this.sendWithJwt(null, id)
     } else {
-      const error = this.errorHandler.PasswordIsIncorrect(
-        ERROR_NAMES.BadRequest,
-        'Email address or password is incorrect',
-      )
+      const error = this.errorHandler.PasswordIsIncorrect(ERROR_NAMES.BadRequest, CRASHED_CREDENTIALS_MESSAGE)
       this.callback(error, null)
     }
+    return
   }
 
   public tokenValidation = () => {
