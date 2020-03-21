@@ -6,4 +6,4 @@ RUN tsc
 ENV AUTH_SERVICE_URL=host.docker.internal
 COPY dist /usr/src/app
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start:prod"]
