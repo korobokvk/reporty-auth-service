@@ -14,6 +14,9 @@ spec:
   - name: api-service
     port: 3030
     targetPort: 3030
+  - name: db-service
+    port: 3010
+    targetPort: 3010
   selector:
     app: reporty
     role: master

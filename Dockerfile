@@ -2,7 +2,7 @@ FROM node:latest
 WORKDIR /usr/src/app
 COPY package.json package.json 
 RUN npm install && npm install typescript -g && npm install grpc
-ENV AUTH_SERVICE_URL=host.docker.internal
+ENV DB_PROVIDER_URL=100.96.1.5
 COPY . /usr/src/app
 RUN tsc
 
