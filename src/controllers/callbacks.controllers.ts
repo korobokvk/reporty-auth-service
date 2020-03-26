@@ -42,6 +42,7 @@ export default class CallbacksController extends JwtService {
   }
 
   public compareCredentials = (err, data) => {
+    console.log('DATA AUTH', err, data)
     if (err) {
       const error = this.errorHandler.PasswordIsIncorrect(ERROR_NAMES.BadRequest, CRASHED_CREDENTIALS_MESSAGE)
       this.callback(error, null)
