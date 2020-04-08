@@ -17,8 +17,8 @@ export default class CallbacksController extends JwtService {
 
   private sendWithJwt = (err, data) => {
     if (err) {
-      const duplicateError = this.errorHandler.Conflict(ERROR_NAMES.Conflict, err.details)
-      this.callback(duplicateError, null)
+      const unknownError = this.errorHandler.UnknownError(ERROR_NAMES.Conflict, err.details)
+      this.callback(unknownError, null)
       return
     }
     const jwt = this.generateAuthToken(data)
@@ -29,13 +29,18 @@ export default class CallbacksController extends JwtService {
     const { password, email } = this.userData
     const salt = crypto.createSalt()
     const hashedPassword = crypto.saltData(password, salt)
-    return { email: email, password: hashedPassword, salt: salt }
+    return { email, password: hashedPassword, salt }
   }
 
   public userCreateCallback = () => {
     this.client.createUser(this.getDataWithHashedPassword(), (err, data) => {
-      const { id } = data
-      this.sendWithJwt(err, id)
+      if (err) {
+        const duplicateError = this.errorHandler.Conflict(ERROR_NAMES.Conflict)
+        this.callback(duplicateError, null)
+      } else {
+        const { id } = data
+        this.sendWithJwt(null, id)
+      }
     })
   }
 

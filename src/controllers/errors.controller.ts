@@ -5,4 +5,7 @@ export default class ErrorController implements IError {
     code,
     message,
   })
+
+  public conflictError = (code, message = 'Credentials already in use'): IBaseError =>
+    this.baseErrorConstructor(code, message)
 }
