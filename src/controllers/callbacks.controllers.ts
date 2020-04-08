@@ -9,9 +9,9 @@ const crypto = new CryptoService()
 const CRASHED_CREDENTIALS_MESSAGE = 'Email address or password is incorrect'
 export default class CallbacksController extends JwtService {
   private errorHandler: ErrorModel
+
   constructor(private callback, private userData, private client) {
     super()
-
     this.errorHandler = new ErrorModel(new ErrorController())
   }
 
@@ -33,16 +33,18 @@ export default class CallbacksController extends JwtService {
   }
 
   public userCreateCallback = () => {
-    this.client.createUser(this.getDataWithHashedPassword(), this.sendWithJwt)
+    this.client.createUser(this.getDataWithHashedPassword(), (err, data) => {
+      const { id } = data
+      this.sendWithJwt(err, id)
+    })
   }
 
   public userAuthCallback = () => {
     const { email } = this.userData
-    this.client.findByEmail({ email: email }, this.compareCredentials)
+    this.client.findByEmail({ email }, this.compareCredentials)
   }
 
   public compareCredentials = (err, data) => {
-    console.log('DATA AUTH', err, data, process.env.DB_PROVIDER_URL)
     if (err) {
       const error = this.errorHandler.PasswordIsIncorrect(ERROR_NAMES.BadRequest, CRASHED_CREDENTIALS_MESSAGE)
       this.callback(error, null)
