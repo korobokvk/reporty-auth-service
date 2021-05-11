@@ -20,7 +20,7 @@
   "homepage": "https://github.com/korobokvk/reporty-auth-service#readme",
   "devDependencies": {
     "@types/node": "^13.7.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "nodemon": "^2.0.2",
     "ts-node": "^8.6.2",
     "tslint": "^6.0.0",
